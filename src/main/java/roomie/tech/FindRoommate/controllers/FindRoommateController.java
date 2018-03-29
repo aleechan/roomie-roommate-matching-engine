@@ -1,5 +1,6 @@
 package roomie.tech.FindRoommate.controllers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import roomie.tech.FindRoommate.comparators.SurveyDistanceComparator;
 import roomie.tech.FindRoommate.data.RoommateSurvey;
+import roomie.tech.FindRoommate.data.User;
 import roomie.tech.FindRoommate.repositories.RoommateSurveyRepository;
+import roomie.tech.FindRoommate.repositories.UserRepository;
 
 @RestController
 public class FindRoommateController {
@@ -26,6 +29,8 @@ public class FindRoommateController {
 	
 	@Autowired
 	private RoommateSurveyRepository surveyRepository;
+	@Autowired
+	private UserRepository userRepository;
 	
 	private ObjectMapper mapper = new ObjectMapper();
 	
@@ -41,12 +46,27 @@ public class FindRoommateController {
     		ranks.put(s.userId.toString(), getDistance(survey,s));
     	});
     	
+    	List<ObjectId> ids = new ArrayList<>();
+    	
     	List<Entry<String,Double>> matches = ranks.entrySet().stream().collect(Collectors.toList()).stream().parallel().sorted(new SurveyDistanceComparator()).limit(maxResults).collect(Collectors.toList());
     	for(Entry<String,Double> match : matches) {
-    		match.setValue(100.d - Math.sqrt(match.getValue())/maxDistance);
+    		match.setValue(Math.sqrt(match.getValue()));
+    		ids.add(new ObjectId(match.getKey()));
     	}
     	
-        return mapper.writeValueAsString(matches);
+    	List<User> users = userRepository.findByIds(ids);
+    	for (User user : users) {
+    		
+    		for(Entry<String,Double> match : matches) {
+    			if(user.id.equals(match.getKey())) {
+    				user.distance = match.getValue();
+    				user.percentMatch = 100.d - match.getValue()/maxDistance;
+    				break;
+    			}
+    		}
+    	}
+    	
+        return mapper.writeValueAsString(users);
     }
     
     double getDistance(RoommateSurvey s1, RoommateSurvey s2) {
