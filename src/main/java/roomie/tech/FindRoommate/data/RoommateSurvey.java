@@ -11,7 +11,7 @@ public class RoommateSurvey {
 	@Id
     private ObjectId id;
 	
-    public ObjectId userId;
+    public String userId;
     public String city;
     public Date createdAt;
 
@@ -80,6 +80,9 @@ public class RoommateSurvey {
 	public int question62;
 	public int question63;
 	public int question64;
+	
+	public double distance;
+
 	@Override
 	public String toString() {
 		return "RoommateSurvey [id=" + id + ", userId=" + userId + ", city=" + city + ", createdAt=" + createdAt
@@ -104,6 +107,8 @@ public class RoommateSurvey {
 				+ question55 + ", question56=" + question56 + ", question57=" + question57 + ", question58="
 				+ question58 + ", question59=" + question59 + ", question60=" + question60 + ", question61="
 				+ question61 + ", question62=" + question62 + ", question63=" + question63 + ", question64="
-				+ question64 + "]";
+				+ question64 + ", distance=" + distance + ", getClass()=" + getClass() + ", hashCode()=" + hashCode()
+				+ ", toString()=" + super.toString() + "]";
 	}
+
 }

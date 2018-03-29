@@ -32,41 +32,51 @@ public class FindRoommateController {
 	@Autowired
 	private UserRepository userRepository;
 	
+	//used for converting java classes to json
 	private ObjectMapper mapper = new ObjectMapper();
 	
     @RequestMapping("/")
     public String index(@RequestHeader String userId, @RequestHeader String city, @RequestHeader int maxResults) throws JsonProcessingException {
-
+    	
+    	
     	RoommateSurvey survey = surveyRepository.findByUserId(new ObjectId(userId));
     	List<RoommateSurvey> surveys = surveyRepository.findByCity(city);
     	
-    	Map<String,Double> ranks = new HashMap<>();
-    	
-    	surveys.stream().parallel().filter(s -> !survey.userId.equals(s.userId)).forEach(s->{
-    		ranks.put(s.userId.toString(), getDistance(survey,s));
-    	});
+    	Map<String,RoommateSurvey> ranks = new HashMap<>();
     	
     	List<ObjectId> ids = new ArrayList<>();
-    	
-    	List<Entry<String,Double>> matches = ranks.entrySet().stream().collect(Collectors.toList()).stream().parallel().sorted(new SurveyDistanceComparator()).limit(maxResults).collect(Collectors.toList());
-    	for(Entry<String,Double> match : matches) {
-    		match.setValue(Math.sqrt(match.getValue()));
-    		ids.add(new ObjectId(match.getKey()));
-    	}
-    	
+    	surveys.forEach(s->{
+    		ids.add(new ObjectId(s.userId));
+    	});
     	List<User> users = userRepository.findByIds(ids);
-    	for (User user : users) {
-    		
-    		for(Entry<String,Double> match : matches) {
-    			if(user.id.equals(match.getKey())) {
-    				user.distance = match.getValue();
-    				user.percentMatch = 100.d - match.getValue()/maxDistance;
-    				break;
-    			}
-    		}
+    	Map<String, User> userMap = new HashMap<>();
+    	users.forEach(user -> {
+    		userMap.put(user.id, user);
+    	});
+    	
+    	
+    	surveys.stream().parallel().filter(s -> {
+    		return (
+    				!survey.userId.equals(s.userId) &&
+    				!userMap.get(s.userId).isInactive &&
+    				!userMap.get(s.userId).isLandlord
+    			);
+    		}).forEach(s->{
+    			s.distance = getDistance(survey,s);
+    			ranks.put(s.userId.toString(),s);
+    	});
+    	
+    	List<User> results = new ArrayList<>();
+    	
+    	List<Entry<String,RoommateSurvey>> matches = ranks.entrySet().stream().collect(Collectors.toList()).stream().parallel().sorted(new SurveyDistanceComparator()).limit(maxResults).collect(Collectors.toList());
+    	for(Entry<String,RoommateSurvey> match : matches) {
+    		User user = userMap.get(match.getKey());
+    		user.distance = (Math.sqrt(match.getValue().distance));
+    		user.percentMatch = 100 - user.distance/maxDistance;
+    		results.add(user);
     	}
     	
-        return mapper.writeValueAsString(users);
+        return mapper.writeValueAsString(results);
     }
     
     double getDistance(RoommateSurvey s1, RoommateSurvey s2) {
