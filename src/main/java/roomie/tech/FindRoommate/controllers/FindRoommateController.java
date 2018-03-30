@@ -53,7 +53,7 @@ public class FindRoommateController {
     	List<User> users = userRepository.findByIds(ids);
     	Map<String, User> userMap = new HashMap<>();
     	users.forEach(user -> {
-    		userMap.put(user.id, user);
+    		userMap.put(user._id, user);
     	});
     	
     	
