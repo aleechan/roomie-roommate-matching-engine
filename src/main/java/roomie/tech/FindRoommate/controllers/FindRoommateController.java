@@ -9,8 +9,9 @@ import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,9 +36,10 @@ public class FindRoommateController {
 	//used for converting java classes to json
 	private ObjectMapper mapper = new ObjectMapper();
 	
-    @RequestMapping("/")
-    public String index(@RequestHeader String userId, @RequestHeader String city, @RequestHeader int maxResults) throws JsonProcessingException {
-    	
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public String index(@RequestParam("userId") String userId, 
+    					@RequestParam("city") String city, 
+    					@RequestParam("maxResults") int maxResults) throws JsonProcessingException {
     	
     	RoommateSurvey survey = surveyRepository.findByUserId(new ObjectId(userId));
     	List<RoommateSurvey> surveys = surveyRepository.findByCity(city);
