@@ -13,3 +13,5 @@ Requires JDK 1.8 and Maven
 
 ### Running The app
 The application can be run using the included `run.bat` or with the command `java -jar FindRoommate-X.X.X.jar > FindRoommate.log`
+
+Alternatively, the application can be run from the root directory using the Spring Boot Maven plugin: `mvn spring-boot:run`.
